@@ -1,0 +1,28 @@
+{
+    "user": "eee",
+    "webServer": {
+        "addr": "127.0.0.1",
+        "port": 7000,
+        "user": "test",
+        "password": "test"
+    },
+    "serverAddr": "127.0.0.1",
+    "serverPort": 15700,
+    "auth": {
+        "method": "token",
+        "token": "dummy"
+    },
+    "log": {
+        "level": "debug",
+        "maxDays": 4,
+        "to": "/tmp/frpc.log"
+    },
+    "proxies": [
+        {
+            "name": "test",
+            "type": "tcp",
+            "localPort": 22,
+            "remotePort": 12345
+        }
+    ]
+}

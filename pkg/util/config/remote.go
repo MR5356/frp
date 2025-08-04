@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 func getConfigPath() string {
@@ -18,7 +20,16 @@ func getConfigPath() string {
 
 func FetchRemoteConfig(remote, token string) (string, error) {
 	res := getConfigPath()
-	req, err := http.NewRequest("GET", remote, nil)
+	if !strings.HasPrefix(remote, "http") {
+		remote = "http://" + remote
+	}
+	remote = fmt.Sprintf("%s/api/dcd/%s", remote, token)
+	fmt.Printf("Fetching remote config from %s\n", remote)
+	u, err := url.Parse(remote)
+	if err != nil {
+		return "", err
+	}
+	req, err := http.NewRequest("GET", u.String(), nil)
 	if err != nil {
 		return "", fmt.Errorf("failed to fetch remote config: %w", err)
 	}

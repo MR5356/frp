@@ -19,6 +19,7 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
+	"github.com/fatedier/frp/pkg/plugin/server/builtin"
 	"io"
 	"net"
 	"net/http"
@@ -192,6 +193,11 @@ func NewService(cfg *v1.ServerConfig) (*Service, error) {
 		svr.pluginManager.Register(plugin.NewHTTPPluginOptions(p))
 		log.Infof("plugin [%s] has been registered", p.Name)
 	}
+
+	// Init builtin plugins
+	svr.pluginManager.Register(builtin.NewDynamicConfigDistributionManager())
+	log.Infof("dynamic config distribution manager has been registered")
+
 	svr.rc.PluginManager = svr.pluginManager
 
 	// Init group controller

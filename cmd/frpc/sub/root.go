@@ -138,6 +138,7 @@ func runClient(cfgFilePath string) error {
 
 	// 监听配置文件更新
 	go func() {
+		fmt.Printf("%+v\n", cfg)
 		if err = configRemote.WatchConfig(context.Background(), cfgFile, func() {
 			if err = ReloadHandler(cfg); err != nil {
 				fmt.Println(err)

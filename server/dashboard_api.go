@@ -17,6 +17,7 @@ package server
 import (
 	"cmp"
 	"encoding/json"
+	"github.com/fatedier/frp/pkg/plugin/server/builtin"
 	"net/http"
 	"slices"
 
@@ -54,6 +55,11 @@ func (svr *Service) registerRouteHandlers(helper *httppkg.RouterRegisterHelper) 
 	subRouter.HandleFunc("/api/proxy/{type}/{name}", svr.apiProxyByTypeAndName).Methods("GET")
 	subRouter.HandleFunc("/api/traffic/{name}", svr.apiProxyTraffic).Methods("GET")
 	subRouter.HandleFunc("/api/proxies", svr.deleteProxies).Methods("DELETE")
+
+	// dynamic config distribution manager
+	dcd := builtin.NewDynamicConfigDistributionManager()
+	helper.Router.HandleFunc("/api/dcd/{token}", dcd.HandleGetConfig).Methods("GET") // 不需要认证
+	subRouter.HandleFunc("/api/dcd/{token}", dcd.HandleSetConfig).Methods("POST")
 
 	// view
 	subRouter.Handle("/favicon.ico", http.FileServer(helper.AssetsFS)).Methods("GET")
