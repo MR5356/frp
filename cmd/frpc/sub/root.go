@@ -17,6 +17,7 @@ package sub
 import (
 	"context"
 	"fmt"
+	configRemote "github.com/fatedier/frp/pkg/util/config"
 	"io/fs"
 	"os"
 	"os/signal"
@@ -41,9 +42,13 @@ var (
 	cfgDir           string
 	showVersion      bool
 	strictConfigMode bool
+	server           string
+	token            string
 )
 
 func init() {
+	rootCmd.PersistentFlags().StringVarP(&server, "server", "s", "", "frps server address, eg: 192.168.1.1:7000")
+	rootCmd.PersistentFlags().StringVarP(&token, "token", "t", "", "frpc token, generate from frps")
 	rootCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "./frpc.ini", "config file of frpc")
 	rootCmd.PersistentFlags().StringVarP(&cfgDir, "config_dir", "", "", "config directory, run one frpc service for each file in config directory")
 	rootCmd.PersistentFlags().BoolVarP(&showVersion, "version", "v", false, "version of frpc")
@@ -67,6 +72,20 @@ var rootCmd = &cobra.Command{
 		}
 
 		// Do not show command usage here.
+		// 检测是否从服务端获取配置
+		if len(server) > 0 {
+			if len(token) == 0 {
+				fmt.Println("token is required")
+				os.Exit(1)
+			}
+
+			var err error
+			if cfgFile, err = configRemote.FetchRemoteConfig(server, token); err != nil {
+				fmt.Println(err)
+				os.Exit(1)
+			}
+		}
+
 		err := runClient(cfgFile)
 		if err != nil {
 			fmt.Println(err)
@@ -116,6 +135,19 @@ func runClient(cfgFilePath string) error {
 	if err != nil {
 		return err
 	}
+
+	// 监听配置文件更新
+	go func() {
+		if err = configRemote.WatchConfig(context.Background(), cfgFile, func() {
+			if err = ReloadHandler(cfg); err != nil {
+				fmt.Println(err)
+			}
+		}); err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+	}()
+
 	if isLegacyFormat {
 		fmt.Printf("WARNING: ini format is deprecated and the support will be removed in the future, " +
 			"please use yaml/json/toml format instead!\n")
