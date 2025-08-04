@@ -21,7 +21,6 @@ type DynamicConfigDistributionManager struct {
 }
 
 func NewDynamicConfigDistributionManager() *DynamicConfigDistributionManager {
-	fmt.Printf("db path: %s\n", getDBPath())
 	client, err := gorm.Open(sqlite.Open(getDBPath()), &gorm.Config{
 		Logger: logger.Default.LogMode(logger.Silent),
 	})
@@ -122,7 +121,7 @@ func (p *DynamicConfigDistributionManager) getUserByName(user string) (*User, er
 	var u User
 	if err := p.db.Order("created_at DESC").First(&u, "token = ?", user).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, fmt.Errorf("user not found")
+			return nil, fmt.Errorf("client not found")
 		}
 		return nil, fmt.Errorf("failed to find client")
 	}
